@@ -1790,7 +1790,7 @@ of those to meet any serious needs.
 
     @return a random value in the range of \[0-SDL_MAX_UINT32\].*)
 
-val rand_r : Unsigned.ulong Ctypes.ptr -> int -> int
+val rand_r : Unsigned.uint64 Ctypes.ptr -> int -> int
 (** {{:https://wiki.libsdl.org/SDL3/SDL_rand_r}SDL_rand_r}: Generate a pseudo-random number less than n for positive n
 
 The method used is faster and of better quality than[rand() % n] Odds are

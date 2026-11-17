@@ -8,16 +8,16 @@ let ff = Load.foreign
 
 module Global = struct
 let get_ticks = ff "SDL_GetTicks"
-  (void @-> returning int64_as_ulong)
+  (void @-> returning int64_as_uint64)
 
 let get_ticks_ns = ff "SDL_GetTicksNS"
-  (void @-> returning int64_as_ulong)
+  (void @-> returning int64_as_uint64)
 
 let get_performance_counter = ff "SDL_GetPerformanceCounter"
-  (void @-> returning int64_as_ulong)
+  (void @-> returning int64_as_uint64)
 
 let get_performance_frequency = ff "SDL_GetPerformanceFrequency"
-  (void @-> returning int64_as_ulong)
+  (void @-> returning int64_as_uint64)
 
 let delay = ff ~release_runtime_lock:true "SDL_Delay"
   (uint32 @-> returning void)
@@ -27,12 +27,12 @@ let delay ms =
 let delay_ns = ff ~release_runtime_lock:true "SDL_DelayNS"
   (uint64 @-> returning void)
 let delay_ns ns =
-  delay_ns (Unsigned.ULong.of_int64 ns)
+  delay_ns (Unsigned.UInt64.of_int64 ns)
 
 let delay_precise = ff ~release_runtime_lock:true "SDL_DelayPrecise"
   (uint64 @-> returning void)
 let delay_precise ns =
-  delay_precise (Unsigned.ULong.of_int64 ns)
+  delay_precise (Unsigned.UInt64.of_int64 ns)
 
 end
 include Global
@@ -46,7 +46,7 @@ let add interval callback userdata =
 let add_ns = ff "SDL_AddTimerNS"
   (uint64 @-> ns_timer_callback @-> ptr void @-> returning int_as_uint)
 let add_ns interval callback userdata =
-  add_ns (Unsigned.ULong.of_int64 interval) callback userdata
+  add_ns (Unsigned.UInt64.of_int64 interval) callback userdata
 
 let remove = ff "SDL_RemoveTimer"
   (timer_id @-> returning true_to_ok)

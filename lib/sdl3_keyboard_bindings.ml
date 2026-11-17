@@ -82,7 +82,7 @@ let start_text_input_with_properties window props =
   start_text_input_with_properties window (Unsigned.UInt.of_int props)
 
 let text_input_active = ff "SDL_TextInputActive"
-  (window @-> returning true_to_ok)
+  (window @-> returning bool)
 
 let stop_text_input = ff "SDL_StopTextInput"
   (window @-> returning true_to_ok)

@@ -19,10 +19,10 @@ let get_name = ff "SDL_GetThreadName"
   (thread @-> returning string)
 
 let get_current_id = ff "SDL_GetCurrentThreadID"
-  (void @-> returning int64_as_ulong)
+  (void @-> returning int64_as_uint64)
 
 let get_id = ff "SDL_GetThreadID"
-  (thread @-> returning int64_as_ulong)
+  (thread @-> returning int64_as_uint64)
 
 let set_current_priority = ff "SDL_SetCurrentThreadPriority"
   (thread_priority @-> returning true_to_ok)

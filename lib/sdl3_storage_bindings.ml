@@ -27,25 +27,25 @@ let close = ff "SDL_CloseStorage"
   (storage @-> returning true_to_ok)
 
 let ready = ff "SDL_StorageReady"
-  (storage @-> returning true_to_ok)
+  (storage @-> returning bool)
 
 let get_file_size = ff "SDL_GetStorageFileSize"
   (storage @-> string @-> ptr uint64 @-> returning bool)
 let get_file_size storage path =
-  let length = allocate ulong (Unsigned.ULong.of_int 0) in
-  if get_file_size storage path length then Ok (Unsigned.ULong.to_int64 (!@ length)) else error ()
+  let length = allocate uint64 (Unsigned.UInt64.of_int 0) in
+  if get_file_size storage path length then Ok (Unsigned.UInt64.to_int64 (!@ length)) else error ()
 
 let read_file = ff "SDL_ReadStorageFile"
   (storage @-> string @-> ptr void @-> uint64 @-> returning true_to_ok)
 let read_file storage path ba =
   let destination, len = Helpers.ptr_of_ba ba in
-  read_file storage path destination (Unsigned.ULong.of_int len)
+  read_file storage path destination (Unsigned.UInt64.of_int len)
 
 let write_file = ff "SDL_WriteStorageFile"
   (storage @-> string @-> ptr void @-> uint64 @-> returning true_to_ok)
 let write_file storage path ba =
   let source, len = Helpers.ptr_of_ba ba in
-  write_file storage path source (Unsigned.ULong.of_int len)
+  write_file storage path source (Unsigned.UInt64.of_int len)
       
 let create_directory = ff "SDL_CreateStorageDirectory"
   (storage @-> string @-> returning true_to_ok)
@@ -66,7 +66,7 @@ let get_path_info = ff "SDL_GetStoragePathInfo"
   (storage @-> string @-> path_info_opt @-> returning true_to_ok)
 
 let get_space_remaining = ff "SDL_GetStorageSpaceRemaining"
-  (storage @-> returning int64_as_ulong)
+  (storage @-> returning int64_as_uint64)
 
 let glob_directory = ff "SDL_GlobStorageDirectory"
   (storage @-> string @-> string @-> glob_flags @-> ptr int @-> returning (ptr string))

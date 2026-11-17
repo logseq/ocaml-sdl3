@@ -72,7 +72,7 @@ val close : storage -> unit result
 
     @param storage a storage container to close.*)
 
-val ready : storage -> unit result
+val ready : storage -> bool
 (** {{:https://wiki.libsdl.org/SDL3/SDL_StorageReady}SDL_StorageReady}: Checks if the storage container is ready to use.
 
 This function should be called in regular intervals until it returns true -

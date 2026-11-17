@@ -362,7 +362,7 @@ let ucs4_to_utf8 codepoint dst =
 let srand = ff "SDL_srand"
   (uint64 @-> returning void)
 let srand seed =
-  srand (Unsigned.ULong.of_int64 seed)
+  srand (Unsigned.UInt64.of_int64 seed)
 
 let rand = ff "SDL_rand"
   (sint32 @-> returning sint32)
@@ -379,16 +379,16 @@ let rand_r = ff "SDL_rand_r"
 let randf_r = ff "SDL_randf_r"
   (ptr uint64 @-> returning float)
 let randf_r () =
-  let state = allocate ulong (Unsigned.ULong.of_int 0) in
+  let state = allocate uint64 (Unsigned.UInt64.of_int 0) in
   let ret = randf_r state in
-(ret, Unsigned.ULong.to_int64 (!@ state))
+(ret, Unsigned.UInt64.to_int64 (!@ state))
 
 let rand_bits_r = ff "SDL_rand_bits_r"
   (ptr uint64 @-> returning int_as_uint)
 let rand_bits_r () =
-  let state = allocate ulong (Unsigned.ULong.of_int 0) in
+  let state = allocate uint64 (Unsigned.UInt64.of_int 0) in
   let ret = rand_bits_r state in
-(ret, Unsigned.ULong.to_int64 (!@ state))
+(ret, Unsigned.UInt64.to_int64 (!@ state))
 
 let acos = ff "SDL_acos"
   (double @-> returning double)

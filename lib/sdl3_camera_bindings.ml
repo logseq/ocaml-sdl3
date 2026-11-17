@@ -75,9 +75,9 @@ let get_format = ff "SDL_GetCameraFormat"
 let acquire_frame = ff "SDL_AcquireCameraFrame"
   (camera @-> ptr uint64 @-> returning (some_to_ok surface_opt))
 let acquire_frame camera =
-  let timestamp_ns = allocate ulong (Unsigned.ULong.of_int 0) in
+  let timestamp_ns = allocate uint64 (Unsigned.UInt64.of_int 0) in
   match acquire_frame camera timestamp_ns with
-    | Ok ret -> Ok (ret, Unsigned.ULong.to_int64 (!@ timestamp_ns))
+    | Ok ret -> Ok (ret, Unsigned.UInt64.to_int64 (!@ timestamp_ns))
     | Error (`Msg e) -> Error (`Msg (e ^ "(acquire_frame)"))
 
 let release_frame = ff "SDL_ReleaseCameraFrame"

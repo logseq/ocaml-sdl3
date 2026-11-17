@@ -52,7 +52,7 @@ SDL_EVENT_LAST is a safe choice.
     @return the number of events actually stored or -1 on failure; call
 SDL_GetError() for more information.*)
 
-val has : int -> unit result
+val has : int -> bool
 (** {{:https://wiki.libsdl.org/SDL3/SDL_HasEvent}SDL_HasEvent}: Check for the existence of a certain event type in the event queue.
 
 If you need to check for a range of event types, use SDL_HasEvents()
@@ -61,7 +61,7 @@ instead.
 
     @param type the type of event to be queried; see SDL_EventType for details.*)
 
-val hass : int -> int -> unit result
+val hass : int -> int -> bool
 (** {{:https://wiki.libsdl.org/SDL3/SDL_HasEvents}SDL_HasEvents}: Check for the existence of certain event types in the event queue.
 
 If you need to check for a single event type, use SDL_HasEvent() instead.
@@ -245,7 +245,7 @@ not.
     @param userdata a pointer that is passed to[filter]
 *)
 
-val get_filter : event_filter Ctypes.ptr -> data Ctypes.ptr -> unit result
+val get_filter : event_filter Ctypes.ptr -> data Ctypes.ptr -> bool
 (** {{:https://wiki.libsdl.org/SDL3/SDL_GetEventFilter}SDL_GetEventFilter}: Query the current event filter.
 
 This function can be used to "chain" filters, by saving the existing filter
@@ -256,7 +256,9 @@ before replacing it with a function that will call that saved filter.
     @param userdata the pointer that is passed to the current event filter will
 be stored here.*)
 
-val add_watch : event_filter -> data -> unit result
+type watch
+(** A retained native event-watch registration. *)
+val add_watch : event_filter -> data -> watch result
 (** {{:https://wiki.libsdl.org/SDL3/SDL_AddEventWatch}SDL_AddEventWatch}: Add a callback to be triggered when an event is added to the event queue.
 [filter]will be called when an event happens, and its return value is
 ignored.
@@ -277,11 +279,12 @@ through SDL_PeepEvents().
     @param filter an SDL_EventFilter function to call when an event happens.
     @param userdata a pointer that is passed to[filter]*)
 
-val remove_watch : event_filter -> data -> unit
+val remove_watch : watch -> unit
 (** {{:https://wiki.libsdl.org/SDL3/SDL_RemoveEventWatch}SDL_RemoveEventWatch}: Remove an event watch callback added with SDL_AddEventWatch().
 
-This function takes the same input as SDL_AddEventWatch() to identify and
-delete the corresponding callback.
+Pass the token returned by [add_watch]. The binding retains the callback
+until this call and removes it using its original native address. Repeated
+removal is safe.
 
 
     @param filter the function originally passed to SDL_AddEventWatch().

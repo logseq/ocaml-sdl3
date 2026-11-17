@@ -550,7 +550,7 @@ error value and SDL_GetError() will offer a human-readable message.
 
     @return a pointer filled in with the data read.*)
 
-val read_s64_le : io_stream -> Signed.long Ctypes.ptr -> unit result
+val read_s64_le : io_stream -> int64 Ctypes.ptr -> unit result
 (** {{:https://wiki.libsdl.org/SDL3/SDL_ReadS64LE}SDL_ReadS64LE}: Use this function to read 64 bits of little-endian data from an
 SDL_IOStream and return in native format.
 
@@ -583,7 +583,7 @@ error value and SDL_GetError() will offer a human-readable message.
 
     @return a pointer filled in with the data read.*)
 
-val read_s64_be : io_stream -> Signed.long Ctypes.ptr -> unit result
+val read_s64_be : io_stream -> int64 Ctypes.ptr -> unit result
 (** {{:https://wiki.libsdl.org/SDL3/SDL_ReadS64BE}SDL_ReadS64BE}: Use this function to read 64 bits of big-endian data from an SDL_IOStream
 and return in native format.
 

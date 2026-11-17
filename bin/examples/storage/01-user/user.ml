@@ -135,10 +135,10 @@ let iterate state =
   if save_state = save_state_preparing_storage then begin
     let save_storage = Option.get state.save_storage in
     match Sdl.Storage.ready save_storage with
-    | Ok () ->
+    | true ->
       set_save state save_state_processing_storage_file;
       Sdl.Semaphore.signal state.storage_ready
-    | Error _ -> ()
+    | false -> ()
   end
   else if save_state = save_state_final_check then begin
     state.save_thread |?> (fun save_thread ->

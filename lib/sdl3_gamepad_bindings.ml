@@ -160,7 +160,7 @@ let get_serial = ff "SDL_GetGamepadSerial"
   (gamepad @-> returning string)
 
 let get_steam_handle = ff "SDL_GetGamepadSteamHandle"
-  (gamepad @-> returning int64_as_ulong)
+  (gamepad @-> returning int64_as_uint64)
 
 let get_connection_state = ff "SDL_GetGamepadConnectionState"
   (gamepad @-> returning joystick_connection_state)

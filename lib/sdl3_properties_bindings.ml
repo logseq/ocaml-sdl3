@@ -64,7 +64,7 @@ let set_string_property props name value =
 let set_number_property = ff "SDL_SetNumberProperty"
   (properties_id @-> string @-> sint64 @-> returning true_to_ok)
 let set_number_property props name value =
-  set_number_property (Unsigned.UInt.of_int props) name (Signed.Long.of_int value)
+  set_number_property (Unsigned.UInt.of_int props) name (Int64.of_int value)
 
 let set_float_property = ff "SDL_SetFloatProperty"
   (properties_id @-> string @-> float @-> returning true_to_ok)
@@ -94,8 +94,8 @@ let get_string_property props name default_value =
 let get_number_property = ff "SDL_GetNumberProperty"
   (properties_id @-> string @-> sint64 @-> returning sint64)
 let get_number_property props name default_value =
-  get_number_property (Unsigned.UInt.of_int props) name (Signed.Long.of_int default_value)
-  |> Signed.Long.to_int
+  get_number_property (Unsigned.UInt.of_int props) name (Int64.of_int default_value)
+  |> Int64.to_int
 
 let get_float_property = ff "SDL_GetFloatProperty"
   (properties_id @-> string @-> float @-> returning float)

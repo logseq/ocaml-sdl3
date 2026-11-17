@@ -10,12 +10,12 @@ module Global = struct
 let set_linux_thread_priority = ff "SDL_SetLinuxThreadPriority"
   (sint64 @-> int @-> returning true_to_ok)
 let set_linux_thread_priority thread_id priority =
-  set_linux_thread_priority (Signed.Long.of_int thread_id) priority
+  set_linux_thread_priority (Int64.of_int thread_id) priority
 
 let set_linux_thread_priority_and_policy = ff "SDL_SetLinuxThreadPriorityAndPolicy"
   (sint64 @-> int @-> int @-> returning true_to_ok)
 let set_linux_thread_priority_and_policy thread_id sdl_priority sched_policy =
-  set_linux_thread_priority_and_policy (Signed.Long.of_int thread_id) sdl_priority sched_policy
+  set_linux_thread_priority_and_policy (Int64.of_int thread_id) sdl_priority sched_policy
 
 let is_tablet = ff "SDL_IsTablet"
   (void @-> returning bool)

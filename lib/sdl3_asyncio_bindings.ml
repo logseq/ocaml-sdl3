@@ -14,17 +14,17 @@ let get_size = ff "SDL_GetAsyncIOSize"
   (async_io @-> returning sint64)
 let get_size asyncio =
   get_size asyncio
-  |> Signed.Long.to_int
+  |> Int64.to_int
 
 let read = ff "SDL_ReadAsyncIO"
   (async_io @-> ptr void @-> uint64 @-> uint64 @-> async_io_queue @-> ptr void @-> returning true_to_ok)
 let read asyncio ptr offset size queue userdata =
-  read asyncio ptr (Unsigned.ULong.of_int64 offset) (Unsigned.ULong.of_int64 size) queue userdata
+  read asyncio ptr (Unsigned.UInt64.of_int64 offset) (Unsigned.UInt64.of_int64 size) queue userdata
 
 let write = ff "SDL_WriteAsyncIO"
   (async_io @-> ptr void @-> uint64 @-> uint64 @-> async_io_queue @-> ptr void @-> returning true_to_ok)
 let write asyncio ptr offset size queue userdata =
-  write asyncio ptr (Unsigned.ULong.of_int64 offset) (Unsigned.ULong.of_int64 size) queue userdata
+  write asyncio ptr (Unsigned.UInt64.of_int64 offset) (Unsigned.UInt64.of_int64 size) queue userdata
 
 let close = ff "SDL_CloseAsyncIO"
   (async_io @-> bool @-> async_io_queue @-> ptr void @-> returning true_to_ok)

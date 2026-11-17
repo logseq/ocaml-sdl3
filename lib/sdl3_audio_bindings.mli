@@ -437,7 +437,7 @@ created through SDL_OpenAudioDevice() can be.
 
     @param devid a device opened by SDL_OpenAudioDevice().*)
 
-val paused : int -> unit result
+val paused : int -> bool
 (** {{:https://wiki.libsdl.org/SDL3/SDL_AudioDevicePaused}SDL_AudioDevicePaused}: Use this function to query if an audio device is paused.
 
 Unlike in SDL2, audio devices start in an _unpaused_ state, since an app
@@ -1048,7 +1048,7 @@ function call is required for audio playback to begin on such devices.
 
     @param stream the audio stream associated with the audio device to resume.*)
 
-val device_paused : audio_stream -> unit result
+val device_paused : audio_stream -> bool
 (** {{:https://wiki.libsdl.org/SDL3/SDL_AudioStreamDevicePaused}SDL_AudioStreamDevicePaused}: Use this function to query if an audio device associated with a stream is
 paused.
 

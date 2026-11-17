@@ -200,7 +200,7 @@ let get_metal_command_encoder = ff "SDL_GetRenderMetalCommandEncoder"
 let add_vulkan_semaphores = ff "SDL_AddVulkanRenderSemaphores"
   (renderer @-> uint32 @-> sint64 @-> sint64 @-> returning true_to_ok)
 let add_vulkan_semaphores renderer wait_stage_mask wait_semaphore signal_semaphore =
-  add_vulkan_semaphores renderer (Unsigned.UInt.of_int wait_stage_mask) (Signed.Long.of_int wait_semaphore) (Signed.Long.of_int signal_semaphore)
+  add_vulkan_semaphores renderer (Unsigned.UInt.of_int wait_stage_mask) (Int64.of_int wait_semaphore) (Int64.of_int signal_semaphore)
 
 let set_v_sync = ff "SDL_SetRenderVSync"
   (renderer @-> int @-> returning true_to_ok)
@@ -220,9 +220,9 @@ module Global = struct
 let create_window_and_renderer = ff "SDL_CreateWindowAndRenderer"
   (string @-> int @-> int @-> window_flags @-> ptr window @-> ptr renderer @-> returning bool)
 let create_window_and_renderer title width height window_flags =
-  let window = allocate window null in
-  let renderer = allocate renderer null in
-  if create_window_and_renderer title width height (Unsigned.ULong.of_int64 window_flags) window renderer then Ok (!@ window, !@ renderer) else error ()
+  let window = allocate window (from_voidp window_structure null) in
+  let renderer = allocate renderer (from_voidp renderer_structure null) in
+  if create_window_and_renderer title width height (Unsigned.UInt64.of_int64 window_flags) window renderer then Ok (!@ window, !@ renderer) else error ()
 
 let render_point = ff "SDL_RenderPoint"
   (renderer @-> float @-> float @-> returning true_to_ok)

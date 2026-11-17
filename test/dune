@@ -1,0 +1,17 @@
+(test
+ (name binding_test)
+ (libraries sdl3 unix threads)
+ (action
+  (setenv SDL_VIDEODRIVER dummy
+   (run %{test}))))
+
+(rule
+ (alias runtest)
+ (deps compile_failure.py wrong_window.ml wrong_renderer.ml ../lib/sdl3.cma)
+ (action
+  (run python3 compile_failure.py %{ocamlc} ../lib/.sdl3.objs/byte)))
+
+(rule
+ (alias runtest)
+ (deps loading_test.py ../bin/test.exe)
+ (action (run python3 loading_test.py %{exe:../bin/test.exe})))

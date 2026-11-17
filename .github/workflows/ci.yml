@@ -1,0 +1,30 @@
+name: Bindings
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: '5.5.1'
+      - name: Install pinned SDL3
+        run: python tooling/install_sdl3.py "$RUNNER_TEMP/sdl3" --github-env
+      - name: Install OCaml dependencies
+        run: opam install . --deps-only --with-test -y
+      - name: Build
+        run: opam exec -- dune build @all
+      - name: Test ABI, rendering, callbacks and rejected calls
+        run: opam exec -- dune runtest

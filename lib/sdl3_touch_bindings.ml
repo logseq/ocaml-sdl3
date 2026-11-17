@@ -18,17 +18,17 @@ let get_devices () =
       (fun () ->
         CArray.from_ptr p n
         |> CArray.to_list
-        |> List.map Unsigned.ULong.to_int64)
+        |> List.map Unsigned.UInt64.to_int64)
 
 let get_device_name = ff "SDL_GetTouchDeviceName"
   (touch_id @-> returning string)
 let get_device_name touch_id =
-  get_device_name (Unsigned.ULong.of_int64 touch_id)
+  get_device_name (Unsigned.UInt64.of_int64 touch_id)
 
 let get_device_type = ff "SDL_GetTouchDeviceType"
   (touch_id @-> returning touch_device_type)
 let get_device_type touch_id =
-  get_device_type (Unsigned.ULong.of_int64 touch_id)
+  get_device_type (Unsigned.UInt64.of_int64 touch_id)
 
 let get_fingers = ff "SDL_GetTouchFingers"
   (touch_id @-> ptr int @-> returning (ptr (ptr finger)))
@@ -43,7 +43,7 @@ let get_fingers touch_id =
         CArray.from_ptr p n
         |> CArray.to_list)
 let get_fingers touch_id =
-  get_fingers (Unsigned.ULong.of_int64 touch_id)
+  get_fingers (Unsigned.UInt64.of_int64 touch_id)
 
 end
 

@@ -116,7 +116,7 @@ let set_virtual_touchpad = ff "SDL_SetJoystickVirtualTouchpad"
 let send_virtual_sensor_data = ff "SDL_SendJoystickVirtualSensorData"
   (joystick @-> sensor_type @-> uint64 @-> ptr (const float) @-> int @-> returning true_to_ok)
 let send_virtual_sensor_data joystick typ sensor_timestamp data num_values =
-  send_virtual_sensor_data joystick typ (Unsigned.ULong.of_int64 sensor_timestamp) data num_values
+  send_virtual_sensor_data joystick typ (Unsigned.UInt64.of_int64 sensor_timestamp) data num_values
 
 let get_properties = ff "SDL_GetJoystickProperties"
   (joystick @-> returning int_as_uint)

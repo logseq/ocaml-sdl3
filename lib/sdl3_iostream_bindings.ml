@@ -36,19 +36,19 @@ let get_io_size = ff "SDL_GetIOSize"
   (io_stream @-> returning sint64)
 let get_io_size context =
   get_io_size context
-  |> Signed.Long.to_int
+  |> Int64.to_int
 
 let seek_io = ff "SDL_SeekIO"
   (io_stream @-> sint64 @-> io_whence @-> returning sint64)
 let seek_io context offset whence =
-  seek_io context (Signed.Long.of_int offset) whence
-  |> Signed.Long.to_int
+  seek_io context (Int64.of_int offset) whence
+  |> Int64.to_int
 
 let tell_io = ff "SDL_TellIO"
   (io_stream @-> returning sint64)
 let tell_io context =
   tell_io context
-  |> Signed.Long.to_int
+  |> Int64.to_int
 
 let read_io = ff "SDL_ReadIO"
   (io_stream @-> ptr void @-> size_t @-> returning int_as_size)
@@ -127,8 +127,8 @@ let read_s32_be = ff "SDL_ReadS32BE"
 let read_u64_le = ff "SDL_ReadU64LE"
   (io_stream @-> ptr uint64 @-> returning bool)
 let read_u64_le src =
-  let value = allocate ulong (Unsigned.ULong.of_int 0) in
-  if read_u64_le src value then Ok (Unsigned.ULong.to_int64 (!@ value)) else error ()
+  let value = allocate uint64 (Unsigned.UInt64.of_int 0) in
+  if read_u64_le src value then Ok (Unsigned.UInt64.to_int64 (!@ value)) else error ()
 
 let read_s64_le = ff "SDL_ReadS64LE"
   (io_stream @-> ptr sint64 @-> returning true_to_ok)
@@ -136,8 +136,8 @@ let read_s64_le = ff "SDL_ReadS64LE"
 let read_u64_be = ff "SDL_ReadU64BE"
   (io_stream @-> ptr uint64 @-> returning bool)
 let read_u64_be src =
-  let value = allocate ulong (Unsigned.ULong.of_int 0) in
-  if read_u64_be src value then Ok (Unsigned.ULong.to_int64 (!@ value)) else error ()
+  let value = allocate uint64 (Unsigned.UInt64.of_int 0) in
+  if read_u64_be src value then Ok (Unsigned.UInt64.to_int64 (!@ value)) else error ()
 
 let read_s64_be = ff "SDL_ReadS64BE"
   (io_stream @-> ptr sint64 @-> returning true_to_ok)
@@ -185,22 +185,22 @@ let write_s32_be = ff "SDL_WriteS32BE"
 let write_u64_le = ff "SDL_WriteU64LE"
   (io_stream @-> uint64 @-> returning true_to_ok)
 let write_u64_le dst value =
-  write_u64_le dst (Unsigned.ULong.of_int64 value)
+  write_u64_le dst (Unsigned.UInt64.of_int64 value)
 
 let write_s64_le = ff "SDL_WriteS64LE"
   (io_stream @-> sint64 @-> returning true_to_ok)
 let write_s64_le dst value =
-  write_s64_le dst (Signed.Long.of_int value)
+  write_s64_le dst (Int64.of_int value)
 
 let write_u64_be = ff "SDL_WriteU64BE"
   (io_stream @-> uint64 @-> returning true_to_ok)
 let write_u64_be dst value =
-  write_u64_be dst (Unsigned.ULong.of_int64 value)
+  write_u64_be dst (Unsigned.UInt64.of_int64 value)
 
 let write_s64_be = ff "SDL_WriteS64BE"
   (io_stream @-> sint64 @-> returning true_to_ok)
 let write_s64_be dst value =
-  write_s64_be dst (Signed.Long.of_int value)
+  write_s64_be dst (Int64.of_int value)
 
 end
 include Global

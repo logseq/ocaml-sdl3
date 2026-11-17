@@ -8,6 +8,8 @@ type data = unit ptr
 type nonrec 'a result = ('a, [ `Msg of string ]) result
 let int_as_uint =
   view ~read:Unsigned.UInt.to_int ~write:Unsigned.UInt.of_int uint
+let int64_as_uint64 =
+  view ~read:Unsigned.UInt64.to_int64 ~write:Unsigned.UInt64.of_int64 uint64_t
 let int64_as_ulong =
   view ~read:Unsigned.ULong.to_int64 ~write:Unsigned.ULong.of_int64 ulong
 let int64_as_ullong =
@@ -26,9 +28,9 @@ let sint16 = short (* prim *)
 let uint16 = ushort (* prim *)
 let sint32 = int (* prim *)
 let uint32 = uint (* prim *)
-let sint64 = long (* prim *)
-let uint64 = ulong (* prim *)
-let time = long (* prim *)
+let sint64 = int64_t
+let uint64 = uint64_t
+let time = int64_t
 module Alignment_test = struct
   type _t
   type t = _t structure
@@ -44,29 +46,33 @@ let alignment_test = Alignment_test.t
 let alignment_test_opt = Helpers.value_opt_as_ptr alignment_test
 
 
-type malloc_func = Unsigned.ulong -> data
-let malloc_func = funptr (ulong @-> returning (ptr void))
-type calloc_func = Unsigned.ulong -> Unsigned.ulong -> data
-let calloc_func = funptr (ulong @-> ulong @-> returning (ptr void))
-type realloc_func = data -> Unsigned.ulong -> data
-let realloc_func = funptr (ptr void @-> ulong @-> returning (ptr void))
+type malloc_func = Unsigned.size_t -> data
+let malloc_func = funptr ~thread_registration:true ~runtime_lock:true (size_t @-> returning (ptr void))
+type calloc_func = Unsigned.size_t -> Unsigned.size_t -> data
+let calloc_func = funptr ~thread_registration:true ~runtime_lock:true (size_t @-> size_t @-> returning (ptr void))
+type realloc_func = data -> Unsigned.size_t -> data
+let realloc_func = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> size_t @-> returning (ptr void))
 type free_func = data -> unit
-let free_func = funptr (ptr void @-> returning void)
+let free_func = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> returning void)
 
 (* No definition (opaque struct) *)
-type environment = unit ptr
-let environment : environment typ = ptr void
-let environment_opt : environment option typ = ptr_opt void
+type environment_tag
+let environment_structure : environment_tag structure typ = structure "SDL_environment"
+type environment = environment_tag structure ptr
+let environment : environment typ = ptr environment_structure
+let environment_opt : environment option typ = ptr_opt environment_structure
 
 type compare_callback = data -> data -> int
-let compare_callback = funptr (ptr void @-> ptr void @-> returning int)
+let compare_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> ptr void @-> returning int)
 type compare_callback_r = data -> data -> data -> int
-let compare_callback_r = funptr (ptr void @-> ptr void @-> ptr void @-> returning int)
+let compare_callback_r = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> ptr void @-> ptr void @-> returning int)
 
 (* No definition (opaque struct) *)
-type iconv_data_t = unit ptr
-let iconv_data_t : iconv_data_t typ = ptr void
-let iconv_data_t_opt : iconv_data_t option typ = ptr_opt void
+type iconv_data_t_tag
+let iconv_data_t_structure : iconv_data_t_tag structure typ = structure "SDL_iconv_data_t"
+type iconv_data_t = iconv_data_t_tag structure ptr
+let iconv_data_t : iconv_data_t typ = ptr iconv_data_t_structure
+let iconv_data_t_opt : iconv_data_t option typ = ptr_opt iconv_data_t_structure
 
 let iconv_t = iconv_data_t
 type iconv_t = iconv_data_t
@@ -118,13 +124,15 @@ let assert_data_opt = Helpers.value_opt_as_ptr assert_data
 
 
 type assertion_handler = assert_data Ctypes.ptr -> data -> assert_state_enum
-let assertion_handler = funptr (ptr assert_data @-> ptr void @-> returning assert_state)
-let assertion_handler_opt = funptr_opt (ptr assert_data @-> ptr void @-> returning assert_state)
+let assertion_handler = funptr ~thread_registration:true ~runtime_lock:true (ptr assert_data @-> ptr void @-> returning assert_state)
+let assertion_handler_opt = funptr_opt ~thread_registration:true ~runtime_lock:true (ptr assert_data @-> ptr void @-> returning assert_state)
 
 (* No definition (opaque struct) *)
-type async_io = unit ptr
-let async_io : async_io typ = ptr void
-let async_io_opt : async_io option typ = ptr_opt void
+type async_io_tag
+let async_io_structure : async_io_tag structure typ = structure "SDL_async_io"
+type async_io = async_io_tag structure ptr
+let async_io : async_io typ = ptr async_io_structure
+let async_io_opt : async_io option typ = ptr_opt async_io_structure
 
 type async_io_task_type =
   | ASYNCIO_TASK_READ
@@ -172,9 +180,9 @@ module AsyncIOOutcome = struct
   let typ = field t "type" async_io_task_type
   let result = field t "result" async_io_result
   let buffer = field t "buffer" (ptr void)
-  let offset = field t "offset" int64_as_ulong
-  let bytes_requested = field t "bytes_requested" int64_as_ulong
-  let bytes_transferred = field t "bytes_transferred" int64_as_ulong
+  let offset = field t "offset" int64_as_uint64
+  let bytes_requested = field t "bytes_requested" int64_as_uint64
+  let bytes_transferred = field t "bytes_transferred" int64_as_uint64
   let userdata = field t "userdata" (ptr void)
   let () = seal t
   let get = getf
@@ -187,9 +195,11 @@ let async_io_outcome_opt = Helpers.value_opt_as_ptr async_io_outcome
 
 
 (* No definition (opaque struct) *)
-type async_io_queue = unit ptr
-let async_io_queue : async_io_queue typ = ptr void
-let async_io_queue_opt : async_io_queue option typ = ptr_opt void
+type async_io_queue_tag
+let async_io_queue_structure : async_io_queue_tag structure typ = structure "SDL_async_io_queue"
+type async_io_queue = async_io_queue_tag structure ptr
+let async_io_queue : async_io_queue typ = ptr async_io_queue_structure
+let async_io_queue_opt : async_io_queue option typ = ptr_opt async_io_queue_structure
 
 let spin_lock = int (* prim *)
 module AtomicInt = struct
@@ -270,17 +280,19 @@ let property_type_of_enum : property_type_enum -> property_type = function
   | _ -> invalid_arg "Wrong value for property_type."
 
 type cleanup_property_callback = data -> data -> unit
-let cleanup_property_callback = funptr (ptr void @-> ptr void @-> returning void)
-let cleanup_property_callback_opt = funptr_opt (ptr void @-> ptr void @-> returning void)
+let cleanup_property_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> ptr void @-> returning void)
+let cleanup_property_callback_opt = funptr_opt ~thread_registration:true ~runtime_lock:true (ptr void @-> ptr void @-> returning void)
 type enumerate_properties_callback = data -> Unsigned.uint -> string -> unit
-let enumerate_properties_callback = funptr (ptr void @-> uint @-> string @-> returning void)
+let enumerate_properties_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> uint @-> string @-> returning void)
 
 (* No definition (opaque struct) *)
-type thread = unit ptr
-let thread : thread typ = ptr void
-let thread_opt : thread option typ = ptr_opt void
+type thread_tag
+let thread_structure : thread_tag structure typ = structure "SDL_thread"
+type thread = thread_tag structure ptr
+let thread : thread typ = ptr thread_structure
+let thread_opt : thread option typ = ptr_opt thread_structure
 
-let thread_id = ulong (* prim *)
+let thread_id = uint64_t
 let tlsid = atomic_int
 type tlsid = atomic_int
 type thread_priority =
@@ -331,31 +343,39 @@ type thread_function = data -> int
 let thread_function = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> returning int)
 let function_pointer_opt = funptr_opt ~thread_registration:true ~runtime_lock:true (void @-> returning void)
 type tls_destructor_callback = data -> unit
-let tls_destructor_callback = funptr (ptr void @-> returning void)
-let tls_destructor_callback_opt = funptr_opt (ptr void @-> returning void)
+let tls_destructor_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> returning void)
+let tls_destructor_callback_opt = funptr_opt ~thread_registration:true ~runtime_lock:true (ptr void @-> returning void)
 
 (* No definition (opaque struct) *)
-type mutex = unit ptr
-let mutex : mutex typ = ptr void
-let mutex_opt : mutex option typ = ptr_opt void
-
-
-(* No definition (opaque struct) *)
-type rw_lock = unit ptr
-let rw_lock : rw_lock typ = ptr void
-let rw_lock_opt : rw_lock option typ = ptr_opt void
+type mutex_tag
+let mutex_structure : mutex_tag structure typ = structure "SDL_mutex"
+type mutex = mutex_tag structure ptr
+let mutex : mutex typ = ptr mutex_structure
+let mutex_opt : mutex option typ = ptr_opt mutex_structure
 
 
 (* No definition (opaque struct) *)
-type semaphore = unit ptr
-let semaphore : semaphore typ = ptr void
-let semaphore_opt : semaphore option typ = ptr_opt void
+type rw_lock_tag
+let rw_lock_structure : rw_lock_tag structure typ = structure "SDL_rw_lock"
+type rw_lock = rw_lock_tag structure ptr
+let rw_lock : rw_lock typ = ptr rw_lock_structure
+let rw_lock_opt : rw_lock option typ = ptr_opt rw_lock_structure
 
 
 (* No definition (opaque struct) *)
-type condition = unit ptr
-let condition : condition typ = ptr void
-let condition_opt : condition option typ = ptr_opt void
+type semaphore_tag
+let semaphore_structure : semaphore_tag structure typ = structure "SDL_semaphore"
+type semaphore = semaphore_tag structure ptr
+let semaphore : semaphore typ = ptr semaphore_structure
+let semaphore_opt : semaphore option typ = ptr_opt semaphore_structure
+
+
+(* No definition (opaque struct) *)
+type condition_tag
+let condition_structure : condition_tag structure typ = structure "SDL_condition"
+type condition = condition_tag structure ptr
+let condition : condition typ = ptr condition_structure
+let condition_opt : condition option typ = ptr_opt condition_structure
 
 type init_status =
   | INIT_STATUS_UNINITIALIZED
@@ -384,7 +404,7 @@ module InitState = struct
   type t = _t structure
   let t : t typ = structure "SDL_InitState"
   let status = field t "status" atomic_int
-  let thread = field t "thread" int64_as_ulong
+  let thread = field t "thread" int64_as_uint64
   let reserved = field t "reserved" (ptr void)
   let () = seal t
   let get = getf
@@ -447,12 +467,12 @@ module IOStreamInterface = struct
   type t = _t structure
   let t : t typ = structure "SDL_IOStreamInterface"
   let version = field t "version" int_as_uint
-  let size = field t "size" (funptr (ptr void @-> returning sint64))
-  let seek = field t "seek" (funptr (ptr void @-> sint64 @-> io_whence @-> returning sint64))
-  let read = field t "read" (funptr (ptr void @-> ptr void @-> size_t @-> ptr io_status @-> returning size_t))
-  let write = field t "write" (funptr (ptr void @-> ptr void @-> size_t @-> ptr io_status @-> returning size_t))
-  let flush = field t "flush" (funptr (ptr void @-> ptr io_status @-> returning bool))
-  let close = field t "close" (funptr (ptr void @-> returning bool))
+  let size = field t "size" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> returning sint64))
+  let seek = field t "seek" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> sint64 @-> io_whence @-> returning sint64))
+  let read = field t "read" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> ptr void @-> size_t @-> ptr io_status @-> returning size_t))
+  let write = field t "write" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> ptr void @-> size_t @-> ptr io_status @-> returning size_t))
+  let flush = field t "flush" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> ptr io_status @-> returning bool))
+  let close = field t "close" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> returning bool))
   let () = seal t
   let get = getf
   let set = setf
@@ -464,9 +484,11 @@ let io_stream_interface_opt = Helpers.value_opt_as_ptr io_stream_interface
 
 
 (* No definition (opaque struct) *)
-type io_stream = unit ptr
-let io_stream : io_stream typ = ptr void
-let io_stream_opt : io_stream option typ = ptr_opt void
+type io_stream_tag
+let io_stream_structure : io_stream_tag structure typ = structure "SDL_io_stream"
+type io_stream = io_stream_tag structure ptr
+let io_stream : io_stream typ = ptr io_stream_structure
+let io_stream_opt : io_stream option typ = ptr_opt io_stream_structure
 
 type audio_format =
   | AUDIO_UNKNOWN
@@ -551,13 +573,15 @@ let audio_spec_raw = AudioSpec.t_raw
 
 
 (* No definition (opaque struct) *)
-type audio_stream = unit ptr
-let audio_stream : audio_stream typ = ptr void
-let audio_stream_opt : audio_stream option typ = ptr_opt void
+type audio_stream_tag
+let audio_stream_structure : audio_stream_tag structure typ = structure "SDL_audio_stream"
+type audio_stream = audio_stream_tag structure ptr
+let audio_stream : audio_stream typ = ptr audio_stream_structure
+let audio_stream_opt : audio_stream option typ = ptr_opt audio_stream_structure
 
 type audio_stream_data_complete_callback = data -> data -> int -> unit
-let audio_stream_data_complete_callback = funptr (ptr void @-> ptr void @-> int @-> returning void)
-let audio_stream_data_complete_callback_opt = funptr_opt (ptr void @-> ptr void @-> int @-> returning void)
+let audio_stream_data_complete_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> ptr void @-> int @-> returning void)
+let audio_stream_data_complete_callback_opt = funptr_opt ~thread_registration:true ~runtime_lock:true (ptr void @-> ptr void @-> int @-> returning void)
 type audio_stream_callback = data -> audio_stream -> int -> int -> unit
 let audio_stream_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> audio_stream @-> int @-> int @-> returning void)
 let audio_stream_callback_opt = funptr_opt ~thread_registration:true ~runtime_lock:true (ptr void @-> audio_stream @-> int @-> int @-> returning void)
@@ -1632,9 +1656,11 @@ let surface_raw = Surface.t_raw
 let camera_id = uint (* prim *)
 
 (* No definition (opaque struct) *)
-type camera = unit ptr
-let camera : camera typ = ptr void
-let camera_opt : camera option typ = ptr_opt void
+type camera_tag
+let camera_structure : camera_tag structure typ = structure "SDL_camera"
+type camera = camera_tag structure ptr
+let camera : camera typ = ptr camera_structure
+let camera_opt : camera option typ = ptr_opt camera_structure
 
 module CameraSpec = struct
   type _t_raw
@@ -1698,10 +1724,10 @@ let camera_permission_state_of_enum : camera_permission_state_enum -> camera_per
   | e when e = camera_permission_state_approved -> CAMERA_PERMISSION_STATE_APPROVED
   | _ -> invalid_arg "Wrong value for camera_permission_state."
 
-type clipboard_data_callback = data -> string -> Unsigned.ulong Ctypes.ptr -> data
-let clipboard_data_callback = funptr (ptr void @-> string @-> ptr ulong @-> returning (ptr void))
+type clipboard_data_callback = data -> string -> Unsigned.size_t Ctypes.ptr -> data
+let clipboard_data_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> string @-> ptr size_t @-> returning (ptr void))
 type clipboard_cleanup_callback = data -> unit
-let clipboard_cleanup_callback = funptr (ptr void @-> returning void)
+let clipboard_cleanup_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> returning void)
 let display_id = uint (* prim *)
 let window_id = uint (* prim *)
 type system_theme =
@@ -1725,9 +1751,11 @@ let system_theme_of_enum : system_theme_enum -> system_theme = function
 
 
 (* No definition (opaque struct) *)
-type display_mode_data = unit ptr
-let display_mode_data : display_mode_data typ = ptr void
-let display_mode_data_opt : display_mode_data option typ = ptr_opt void
+type display_mode_data_tag
+let display_mode_data_structure : display_mode_data_tag structure typ = structure "SDL_display_mode_data"
+type display_mode_data = display_mode_data_tag structure ptr
+let display_mode_data : display_mode_data typ = ptr display_mode_data_structure
+let display_mode_data_opt : display_mode_data option typ = ptr_opt display_mode_data_structure
 
 module DisplayMode = struct
   type _t_raw
@@ -1804,11 +1832,13 @@ let display_orientation_of_enum : display_orientation_enum -> display_orientatio
 
 
 (* No definition (opaque struct) *)
-type window = unit ptr
-let window : window typ = ptr void
-let window_opt : window option typ = ptr_opt void
+type window_tag
+let window_structure : window_tag structure typ = structure "SDL_window"
+type window = window_tag structure ptr
+let window : window typ = ptr window_structure
+let window_opt : window option typ = ptr_opt window_structure
 
-let window_flags = ulong (* prim *)
+let window_flags = uint64_t
 type flash_operation =
   | FLASH_CANCEL
   | FLASH_BRIEFLY
@@ -1858,9 +1888,11 @@ let progress_state_of_enum : progress_state_enum -> progress_state = function
 
 
 (* No definition (opaque struct) *)
-type gl_context_state = unit ptr
-let gl_context_state : gl_context_state typ = ptr void
-let gl_context_state_opt : gl_context_state option typ = ptr_opt void
+type gl_context_state_tag
+let gl_context_state_structure : gl_context_state_tag structure typ = structure "SDL_gl_context_state"
+type gl_context_state = gl_context_state_tag structure ptr
+let gl_context_state : gl_context_state typ = ptr gl_context_state_structure
+let gl_context_state_opt : gl_context_state option typ = ptr_opt gl_context_state_structure
 
 let gl_context = gl_context_state
 type gl_context = gl_context_state
@@ -1870,12 +1902,12 @@ let egl_config = ptr void
 type egl_config = data
 let egl_surface = ptr void
 type egl_surface = data
-let egl_attrib = long (* prim *)
+let egl_attrib = intptr_t
 let eg_lint = int (* prim *)
-type egl_attrib_array_callback = data -> Signed.long Ctypes.ptr
-let egl_attrib_array_callback = funptr (ptr void @-> returning (ptr long))
+type egl_attrib_array_callback = data -> Intptr.t Ctypes.ptr
+let egl_attrib_array_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> returning (ptr intptr_t))
 type egl_int_array_callback = data -> data -> data -> int Ctypes.ptr
-let egl_int_array_callback = funptr (ptr void @-> ptr void @-> ptr void @-> returning (ptr int))
+let egl_int_array_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> ptr void @-> ptr void @-> returning (ptr int))
 type gl_attr =
   | GL_RED_SIZE
   | GL_GREEN_SIZE
@@ -2023,9 +2055,9 @@ let hit_test_result_of_enum : hit_test_result_enum -> hit_test_result =
     | None -> invalid_arg "Wrong value for hit_test_result."
 
 type hit_test = window -> point Ctypes.ptr -> data -> hit_test_result_enum
-let hit_test = funptr (window @-> ptr point @-> ptr void @-> returning hit_test_result)
-let egl_attrib_array_callback_opt = funptr_opt (ptr void @-> returning (ptr long))
-let egl_int_array_callback_opt = funptr_opt (ptr void @-> ptr void @-> ptr void @-> returning (ptr int))
+let hit_test = funptr ~thread_registration:true ~runtime_lock:true (window @-> ptr point @-> ptr void @-> returning hit_test_result)
+let egl_attrib_array_callback_opt = funptr_opt ~thread_registration:true ~runtime_lock:true (ptr void @-> returning (ptr intptr_t))
+let egl_int_array_callback_opt = funptr_opt ~thread_registration:true ~runtime_lock:true (ptr void @-> ptr void @-> ptr void @-> returning (ptr int))
 module DialogFileFilter = struct
   type _t
   type t = _t structure
@@ -2042,7 +2074,7 @@ let dialog_file_filter_opt = Helpers.value_opt_as_ptr dialog_file_filter
 
 
 type dialog_file_callback = data -> string Ctypes.ptr -> int -> unit
-let dialog_file_callback = funptr (ptr void @-> ptr string @-> int @-> returning void)
+let dialog_file_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> ptr string @-> int @-> returning void)
 type file_dialog_type =
   | FILEDIALOG_OPENFILE
   | FILEDIALOG_SAVEFILE
@@ -2111,9 +2143,11 @@ let power_state_of_enum : power_state_enum -> power_state = function
 
 
 (* No definition (opaque struct) *)
-type sensor = unit ptr
-let sensor : sensor typ = ptr void
-let sensor_opt : sensor option typ = ptr_opt void
+type sensor_tag
+let sensor_structure : sensor_tag structure typ = structure "SDL_sensor"
+type sensor = sensor_tag structure ptr
+let sensor : sensor typ = ptr sensor_structure
+let sensor_opt : sensor option typ = ptr_opt sensor_structure
 
 let sensor_id = uint (* prim *)
 type sensor_type =
@@ -2159,9 +2193,11 @@ let sensor_type_of_enum : sensor_type_enum -> sensor_type =
 
 
 (* No definition (opaque struct) *)
-type joystick = unit ptr
-let joystick : joystick typ = ptr void
-let joystick_opt : joystick option typ = ptr_opt void
+type joystick_tag
+let joystick_structure : joystick_tag structure typ = structure "SDL_joystick"
+type joystick = joystick_tag structure ptr
+let joystick : joystick typ = ptr joystick_structure
+let joystick_opt : joystick option typ = ptr_opt joystick_structure
 
 let joystick_id = uint (* prim *)
 type joystick_type =
@@ -2285,14 +2321,14 @@ module VirtualJoystickDesc = struct
   let touchpads = field t "touchpads" (ptr virtual_joystick_touchpad_desc)
   let sensors = field t "sensors" (ptr virtual_joystick_sensor_desc)
   let userdata = field t "userdata" (ptr void)
-  let update = field t "Update" (funptr (ptr void @-> returning void))
-  let set_player_index = field t "SetPlayerIndex" (funptr (ptr void @-> int @-> returning void))
-  let rumble = field t "Rumble" (funptr (ptr void @-> uint16 @-> uint16 @-> returning bool))
-  let rumble_triggers = field t "RumbleTriggers" (funptr (ptr void @-> uint16 @-> uint16 @-> returning bool))
-  let set_led = field t "SetLED" (funptr (ptr void @-> uint8 @-> uint8 @-> uint8 @-> returning bool))
-  let send_effect = field t "SendEffect" (funptr (ptr void @-> ptr void @-> int @-> returning bool))
-  let set_sensors_enabled = field t "SetSensorsEnabled" (funptr (ptr void @-> bool @-> returning bool))
-  let cleanup = field t "Cleanup" (funptr (ptr void @-> returning void))
+  let update = field t "Update" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> returning void))
+  let set_player_index = field t "SetPlayerIndex" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> int @-> returning void))
+  let rumble = field t "Rumble" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> uint16 @-> uint16 @-> returning bool))
+  let rumble_triggers = field t "RumbleTriggers" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> uint16 @-> uint16 @-> returning bool))
+  let set_led = field t "SetLED" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> uint8 @-> uint8 @-> uint8 @-> returning bool))
+  let send_effect = field t "SendEffect" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> ptr void @-> int @-> returning bool))
+  let set_sensors_enabled = field t "SetSensorsEnabled" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> bool @-> returning bool))
+  let cleanup = field t "Cleanup" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> returning void))
   let () = seal t
   let get = getf
   let set = setf
@@ -2304,9 +2340,11 @@ let virtual_joystick_desc_opt = Helpers.value_opt_as_ptr virtual_joystick_desc
 
 
 (* No definition (opaque struct) *)
-type gamepad = unit ptr
-let gamepad : gamepad typ = ptr void
-let gamepad_opt : gamepad option typ = ptr_opt void
+type gamepad_tag
+let gamepad_structure : gamepad_tag structure typ = structure "SDL_gamepad"
+type gamepad = gamepad_tag structure ptr
+let gamepad : gamepad typ = ptr gamepad_structure
+let gamepad_opt : gamepad option typ = ptr_opt gamepad_structure
 
 type gamepad_type =
   | GAMEPAD_TYPE_UNKNOWN
@@ -3481,9 +3519,11 @@ let capitalization_of_enum : capitalization_enum -> capitalization = function
 let mouse_id = uint (* prim *)
 
 (* No definition (opaque struct) *)
-type cursor = unit ptr
-let cursor : cursor typ = ptr void
-let cursor_opt : cursor option typ = ptr_opt void
+type cursor_tag
+let cursor_structure : cursor_tag structure typ = structure "SDL_cursor"
+type cursor = cursor_tag structure ptr
+let cursor : cursor typ = ptr cursor_structure
+let cursor_opt : cursor option typ = ptr_opt cursor_structure
 
 type system_cursor =
   | SYSTEM_CURSOR_DEFAULT
@@ -3594,11 +3634,11 @@ let cursor_frame_info_opt = Helpers.value_opt_as_ptr cursor_frame_info
 
 
 let mouse_button_flags = uint (* prim *)
-type mouse_motion_transform_callback = data -> Unsigned.ulong -> window -> Unsigned.uint -> float Ctypes.ptr -> float Ctypes.ptr -> unit
-let mouse_motion_transform_callback = funptr (ptr void @-> ulong @-> window @-> uint @-> ptr float @-> ptr float @-> returning void)
-let mouse_motion_transform_callback_opt = funptr_opt (ptr void @-> ulong @-> window @-> uint @-> ptr float @-> ptr float @-> returning void)
-let touch_id = ulong (* prim *)
-let finger_id = ulong (* prim *)
+type mouse_motion_transform_callback = data -> Unsigned.uint64 -> window -> Unsigned.uint -> float Ctypes.ptr -> float Ctypes.ptr -> unit
+let mouse_motion_transform_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> uint64_t @-> window @-> uint @-> ptr float @-> ptr float @-> returning void)
+let mouse_motion_transform_callback_opt = funptr_opt ~thread_registration:true ~runtime_lock:true (ptr void @-> uint64_t @-> window @-> uint @-> ptr float @-> ptr float @-> returning void)
+let touch_id = uint64_t
+let finger_id = uint64_t
 type touch_device_type =
   | TOUCH_DEVICE_INVALID
   | TOUCH_DEVICE_DIRECT
@@ -3625,7 +3665,7 @@ module Finger = struct
   type _t
   type t = _t structure
   let t : t typ = structure "SDL_Finger"
-  let id = field t "id" int64_as_ulong
+  let id = field t "id" int64_as_uint64
   let x = field t "x" float
   let y = field t "y" float
   let pressure = field t "pressure" float
@@ -4088,7 +4128,7 @@ module CommonEvent = struct
   let t : t typ = structure "SDL_CommonEvent"
   let typ = field t "type" int_as_uint
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let () = seal t
   let get = getf
   let set = setf
@@ -4104,7 +4144,7 @@ module DisplayEvent = struct
   let t : t typ = structure "SDL_DisplayEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let display_id = field t "displayID" int_as_uint
   let data1 = field t "data1" sint32
   let data2 = field t "data2" sint32
@@ -4123,7 +4163,7 @@ module WindowEvent = struct
   let t : t typ = structure "SDL_WindowEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let window_id = field t "windowID" int_as_uint
   let data1 = field t "data1" sint32
   let data2 = field t "data2" sint32
@@ -4142,7 +4182,7 @@ module KeyboardDeviceEvent = struct
   let t : t typ = structure "SDL_KeyboardDeviceEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let which = field t "which" int_as_uint
   let () = seal t
   let get = getf
@@ -4159,7 +4199,7 @@ module KeyboardEvent = struct
   let t : t typ = structure "SDL_KeyboardEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let window_id = field t "windowID" int_as_uint
   let which = field t "which" int_as_uint
   let scancode = field t "scancode" scancode
@@ -4183,7 +4223,7 @@ module TextEditingEvent = struct
   let t : t typ = structure "SDL_TextEditingEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let window_id = field t "windowID" int_as_uint
   let text = field t "text" string
   let start = field t "start" sint32
@@ -4203,7 +4243,7 @@ module TextEditingCandidatesEvent = struct
   let t : t typ = structure "SDL_TextEditingCandidatesEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let window_id = field t "windowID" int_as_uint
   let candidates = field t "candidates" (ptr string)
   let num_candidates = field t "num_candidates" sint32
@@ -4227,7 +4267,7 @@ module TextInputEvent = struct
   let t : t typ = structure "SDL_TextInputEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let window_id = field t "windowID" int_as_uint
   let text = field t "text" string
   let () = seal t
@@ -4245,7 +4285,7 @@ module MouseDeviceEvent = struct
   let t : t typ = structure "SDL_MouseDeviceEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let which = field t "which" int_as_uint
   let () = seal t
   let get = getf
@@ -4262,7 +4302,7 @@ module MouseMotionEvent = struct
   let t : t typ = structure "SDL_MouseMotionEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let window_id = field t "windowID" int_as_uint
   let which = field t "which" int_as_uint
   let state = field t "state" int_as_uint
@@ -4285,7 +4325,7 @@ module MouseButtonEvent = struct
   let t : t typ = structure "SDL_MouseButtonEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let window_id = field t "windowID" int_as_uint
   let which = field t "which" int_as_uint
   let button = field t "button" int_as_uchar
@@ -4309,7 +4349,7 @@ module MouseWheelEvent = struct
   let t : t typ = structure "SDL_MouseWheelEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let window_id = field t "windowID" int_as_uint
   let which = field t "which" int_as_uint
   let x = field t "x" float
@@ -4334,7 +4374,7 @@ module JoyAxisEvent = struct
   let t : t typ = structure "SDL_JoyAxisEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let which = field t "which" int_as_uint
   let axis = field t "axis" int_as_uchar
   let padding1 = field t "padding1" int_as_uchar
@@ -4357,7 +4397,7 @@ module JoyBallEvent = struct
   let t : t typ = structure "SDL_JoyBallEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let which = field t "which" int_as_uint
   let ball = field t "ball" int_as_uchar
   let padding1 = field t "padding1" int_as_uchar
@@ -4380,7 +4420,7 @@ module JoyHatEvent = struct
   let t : t typ = structure "SDL_JoyHatEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let which = field t "which" int_as_uint
   let hat = field t "hat" int_as_uchar
   let value = field t "value" int_as_uchar
@@ -4401,7 +4441,7 @@ module JoyButtonEvent = struct
   let t : t typ = structure "SDL_JoyButtonEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let which = field t "which" int_as_uint
   let button = field t "button" int_as_uchar
   let down = field t "down" bool
@@ -4422,7 +4462,7 @@ module JoyDeviceEvent = struct
   let t : t typ = structure "SDL_JoyDeviceEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let which = field t "which" int_as_uint
   let () = seal t
   let get = getf
@@ -4439,7 +4479,7 @@ module JoyBatteryEvent = struct
   let t : t typ = structure "SDL_JoyBatteryEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let which = field t "which" int_as_uint
   let state = field t "state" power_state
   let percent = field t "percent" int
@@ -4458,7 +4498,7 @@ module GamepadAxisEvent = struct
   let t : t typ = structure "SDL_GamepadAxisEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let which = field t "which" int_as_uint
   let axis = field t "axis" int_as_uchar
   let padding1 = field t "padding1" int_as_uchar
@@ -4481,7 +4521,7 @@ module GamepadButtonEvent = struct
   let t : t typ = structure "SDL_GamepadButtonEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let which = field t "which" int_as_uint
   let button = field t "button" int_as_uchar
   let down = field t "down" bool
@@ -4502,7 +4542,7 @@ module GamepadDeviceEvent = struct
   let t : t typ = structure "SDL_GamepadDeviceEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let which = field t "which" int_as_uint
   let () = seal t
   let get = getf
@@ -4519,7 +4559,7 @@ module GamepadTouchpadEvent = struct
   let t : t typ = structure "SDL_GamepadTouchpadEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let which = field t "which" int_as_uint
   let touchpad = field t "touchpad" sint32
   let finger = field t "finger" sint32
@@ -4541,11 +4581,11 @@ module GamepadSensorEvent = struct
   let t : t typ = structure "SDL_GamepadSensorEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let which = field t "which" int_as_uint
   let sensor = field t "sensor" sint32
   let data = field t "data" (array 3 float)
-  let sensor_timestamp = field t "sensor_timestamp" int64_as_ulong
+  let sensor_timestamp = field t "sensor_timestamp" int64_as_uint64
   let () = seal t
   let get = getf
   let set = setf
@@ -4561,7 +4601,7 @@ module AudioDeviceEvent = struct
   let t : t typ = structure "SDL_AudioDeviceEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let which = field t "which" int_as_uint
   let recording = field t "recording" bool
   let padding1 = field t "padding1" int_as_uchar
@@ -4582,7 +4622,7 @@ module CameraDeviceEvent = struct
   let t : t typ = structure "SDL_CameraDeviceEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let which = field t "which" int_as_uint
   let () = seal t
   let get = getf
@@ -4599,7 +4639,7 @@ module RenderEvent = struct
   let t : t typ = structure "SDL_RenderEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let window_id = field t "windowID" int_as_uint
   let () = seal t
   let get = getf
@@ -4616,7 +4656,7 @@ module TouchFingerEvent = struct
   let t : t typ = structure "SDL_TouchFingerEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let touch_id = field t "touchID" int64_as_ulong
   let finger_id = field t "fingerID" int64_as_ulong
   let x = field t "x" float
@@ -4640,7 +4680,7 @@ module PinchFingerEvent = struct
   let t : t typ = structure "SDL_PinchFingerEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let scale = field t "scale" float
   let window_id = field t "windowID" int_as_uint
   let () = seal t
@@ -4658,7 +4698,7 @@ module PenProximityEvent = struct
   let t : t typ = structure "SDL_PenProximityEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let window_id = field t "windowID" int_as_uint
   let which = field t "which" int_as_uint
   let () = seal t
@@ -4676,7 +4716,7 @@ module PenMotionEvent = struct
   let t : t typ = structure "SDL_PenMotionEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let window_id = field t "windowID" int_as_uint
   let which = field t "which" int_as_uint
   let pen_state = field t "pen_state" int_as_uint
@@ -4697,7 +4737,7 @@ module PenTouchEvent = struct
   let t : t typ = structure "SDL_PenTouchEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let window_id = field t "windowID" int_as_uint
   let which = field t "which" int_as_uint
   let pen_state = field t "pen_state" int_as_uint
@@ -4720,7 +4760,7 @@ module PenButtonEvent = struct
   let t : t typ = structure "SDL_PenButtonEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let window_id = field t "windowID" int_as_uint
   let which = field t "which" int_as_uint
   let pen_state = field t "pen_state" int_as_uint
@@ -4743,7 +4783,7 @@ module PenAxisEvent = struct
   let t : t typ = structure "SDL_PenAxisEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let window_id = field t "windowID" int_as_uint
   let which = field t "which" int_as_uint
   let pen_state = field t "pen_state" int_as_uint
@@ -4766,7 +4806,7 @@ module DropEvent = struct
   let t : t typ = structure "SDL_DropEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let window_id = field t "windowID" int_as_uint
   let x = field t "x" float
   let y = field t "y" float
@@ -4787,7 +4827,7 @@ module ClipboardEvent = struct
   let t : t typ = structure "SDL_ClipboardEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let owner = field t "owner" bool
   let num_mime_types = field t "num_mime_types" sint32
   let mime_types = field t "mime_types" (ptr string)
@@ -4806,10 +4846,10 @@ module SensorEvent = struct
   let t : t typ = structure "SDL_SensorEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let which = field t "which" int_as_uint
   let data = field t "data" (array 6 float)
-  let sensor_timestamp = field t "sensor_timestamp" int64_as_ulong
+  let sensor_timestamp = field t "sensor_timestamp" int64_as_uint64
   let () = seal t
   let get = getf
   let set = setf
@@ -4825,7 +4865,7 @@ module QuitEvent = struct
   let t : t typ = structure "SDL_QuitEvent"
   let typ = field t "type" event_type
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let () = seal t
   let get = getf
   let set = setf
@@ -4841,7 +4881,7 @@ module UserEvent = struct
   let t : t typ = structure "SDL_UserEvent"
   let typ = field t "type" int_as_uint
   let reserved = field t "reserved" uint32
-  let timestamp = field t "timestamp" int64_as_ulong
+  let timestamp = field t "timestamp" int64_as_uint64
   let window_id = field t "windowID" int_as_uint
   let code = field t "code" sint32
   let data1 = field t "data1" (ptr void)
@@ -5016,7 +5056,7 @@ let event_action_of_enum : event_action_enum -> event_action = function
   | _ -> invalid_arg "Wrong value for event_action."
 
 type event_filter = data -> event -> bool
-let event_filter = funptr (ptr void @-> event @-> returning bool)
+let event_filter = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> event @-> returning bool)
 type folder =
   | FOLDER_HOME
   | FOLDER_DESKTOP
@@ -5128,84 +5168,110 @@ let enumeration_result_of_enum : enumeration_result_enum -> enumeration_result =
   | _ -> invalid_arg "Wrong value for enumeration_result."
 
 type enumerate_directory_callback = data -> string -> string -> enumeration_result_enum
-let enumerate_directory_callback = funptr (ptr void @-> string @-> string @-> returning enumeration_result)
+let enumerate_directory_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> string @-> string @-> returning enumeration_result)
 
 (* No definition (opaque struct) *)
-type gpu_device = unit ptr
-let gpu_device : gpu_device typ = ptr void
-let gpu_device_opt : gpu_device option typ = ptr_opt void
-
-
-(* No definition (opaque struct) *)
-type gpu_buffer = unit ptr
-let gpu_buffer : gpu_buffer typ = ptr void
-let gpu_buffer_opt : gpu_buffer option typ = ptr_opt void
+type gpu_device_tag
+let gpu_device_structure : gpu_device_tag structure typ = structure "SDL_gpu_device"
+type gpu_device = gpu_device_tag structure ptr
+let gpu_device : gpu_device typ = ptr gpu_device_structure
+let gpu_device_opt : gpu_device option typ = ptr_opt gpu_device_structure
 
 
 (* No definition (opaque struct) *)
-type gpu_transfer_buffer = unit ptr
-let gpu_transfer_buffer : gpu_transfer_buffer typ = ptr void
-let gpu_transfer_buffer_opt : gpu_transfer_buffer option typ = ptr_opt void
+type gpu_buffer_tag
+let gpu_buffer_structure : gpu_buffer_tag structure typ = structure "SDL_gpu_buffer"
+type gpu_buffer = gpu_buffer_tag structure ptr
+let gpu_buffer : gpu_buffer typ = ptr gpu_buffer_structure
+let gpu_buffer_opt : gpu_buffer option typ = ptr_opt gpu_buffer_structure
 
 
 (* No definition (opaque struct) *)
-type gpu_texture = unit ptr
-let gpu_texture : gpu_texture typ = ptr void
-let gpu_texture_opt : gpu_texture option typ = ptr_opt void
+type gpu_transfer_buffer_tag
+let gpu_transfer_buffer_structure : gpu_transfer_buffer_tag structure typ = structure "SDL_gpu_transfer_buffer"
+type gpu_transfer_buffer = gpu_transfer_buffer_tag structure ptr
+let gpu_transfer_buffer : gpu_transfer_buffer typ = ptr gpu_transfer_buffer_structure
+let gpu_transfer_buffer_opt : gpu_transfer_buffer option typ = ptr_opt gpu_transfer_buffer_structure
 
 
 (* No definition (opaque struct) *)
-type gpu_sampler = unit ptr
-let gpu_sampler : gpu_sampler typ = ptr void
-let gpu_sampler_opt : gpu_sampler option typ = ptr_opt void
+type gpu_texture_tag
+let gpu_texture_structure : gpu_texture_tag structure typ = structure "SDL_gpu_texture"
+type gpu_texture = gpu_texture_tag structure ptr
+let gpu_texture : gpu_texture typ = ptr gpu_texture_structure
+let gpu_texture_opt : gpu_texture option typ = ptr_opt gpu_texture_structure
 
 
 (* No definition (opaque struct) *)
-type gpu_shader = unit ptr
-let gpu_shader : gpu_shader typ = ptr void
-let gpu_shader_opt : gpu_shader option typ = ptr_opt void
+type gpu_sampler_tag
+let gpu_sampler_structure : gpu_sampler_tag structure typ = structure "SDL_gpu_sampler"
+type gpu_sampler = gpu_sampler_tag structure ptr
+let gpu_sampler : gpu_sampler typ = ptr gpu_sampler_structure
+let gpu_sampler_opt : gpu_sampler option typ = ptr_opt gpu_sampler_structure
 
 
 (* No definition (opaque struct) *)
-type gpu_compute_pipeline = unit ptr
-let gpu_compute_pipeline : gpu_compute_pipeline typ = ptr void
-let gpu_compute_pipeline_opt : gpu_compute_pipeline option typ = ptr_opt void
+type gpu_shader_tag
+let gpu_shader_structure : gpu_shader_tag structure typ = structure "SDL_gpu_shader"
+type gpu_shader = gpu_shader_tag structure ptr
+let gpu_shader : gpu_shader typ = ptr gpu_shader_structure
+let gpu_shader_opt : gpu_shader option typ = ptr_opt gpu_shader_structure
 
 
 (* No definition (opaque struct) *)
-type gpu_graphics_pipeline = unit ptr
-let gpu_graphics_pipeline : gpu_graphics_pipeline typ = ptr void
-let gpu_graphics_pipeline_opt : gpu_graphics_pipeline option typ = ptr_opt void
+type gpu_compute_pipeline_tag
+let gpu_compute_pipeline_structure : gpu_compute_pipeline_tag structure typ = structure "SDL_gpu_compute_pipeline"
+type gpu_compute_pipeline = gpu_compute_pipeline_tag structure ptr
+let gpu_compute_pipeline : gpu_compute_pipeline typ = ptr gpu_compute_pipeline_structure
+let gpu_compute_pipeline_opt : gpu_compute_pipeline option typ = ptr_opt gpu_compute_pipeline_structure
 
 
 (* No definition (opaque struct) *)
-type gpu_command_buffer = unit ptr
-let gpu_command_buffer : gpu_command_buffer typ = ptr void
-let gpu_command_buffer_opt : gpu_command_buffer option typ = ptr_opt void
+type gpu_graphics_pipeline_tag
+let gpu_graphics_pipeline_structure : gpu_graphics_pipeline_tag structure typ = structure "SDL_gpu_graphics_pipeline"
+type gpu_graphics_pipeline = gpu_graphics_pipeline_tag structure ptr
+let gpu_graphics_pipeline : gpu_graphics_pipeline typ = ptr gpu_graphics_pipeline_structure
+let gpu_graphics_pipeline_opt : gpu_graphics_pipeline option typ = ptr_opt gpu_graphics_pipeline_structure
 
 
 (* No definition (opaque struct) *)
-type gpu_render_pass = unit ptr
-let gpu_render_pass : gpu_render_pass typ = ptr void
-let gpu_render_pass_opt : gpu_render_pass option typ = ptr_opt void
+type gpu_command_buffer_tag
+let gpu_command_buffer_structure : gpu_command_buffer_tag structure typ = structure "SDL_gpu_command_buffer"
+type gpu_command_buffer = gpu_command_buffer_tag structure ptr
+let gpu_command_buffer : gpu_command_buffer typ = ptr gpu_command_buffer_structure
+let gpu_command_buffer_opt : gpu_command_buffer option typ = ptr_opt gpu_command_buffer_structure
 
 
 (* No definition (opaque struct) *)
-type gpu_compute_pass = unit ptr
-let gpu_compute_pass : gpu_compute_pass typ = ptr void
-let gpu_compute_pass_opt : gpu_compute_pass option typ = ptr_opt void
+type gpu_render_pass_tag
+let gpu_render_pass_structure : gpu_render_pass_tag structure typ = structure "SDL_gpu_render_pass"
+type gpu_render_pass = gpu_render_pass_tag structure ptr
+let gpu_render_pass : gpu_render_pass typ = ptr gpu_render_pass_structure
+let gpu_render_pass_opt : gpu_render_pass option typ = ptr_opt gpu_render_pass_structure
 
 
 (* No definition (opaque struct) *)
-type gpu_copy_pass = unit ptr
-let gpu_copy_pass : gpu_copy_pass typ = ptr void
-let gpu_copy_pass_opt : gpu_copy_pass option typ = ptr_opt void
+type gpu_compute_pass_tag
+let gpu_compute_pass_structure : gpu_compute_pass_tag structure typ = structure "SDL_gpu_compute_pass"
+type gpu_compute_pass = gpu_compute_pass_tag structure ptr
+let gpu_compute_pass : gpu_compute_pass typ = ptr gpu_compute_pass_structure
+let gpu_compute_pass_opt : gpu_compute_pass option typ = ptr_opt gpu_compute_pass_structure
 
 
 (* No definition (opaque struct) *)
-type gpu_fence = unit ptr
-let gpu_fence : gpu_fence typ = ptr void
-let gpu_fence_opt : gpu_fence option typ = ptr_opt void
+type gpu_copy_pass_tag
+let gpu_copy_pass_structure : gpu_copy_pass_tag structure typ = structure "SDL_gpu_copy_pass"
+type gpu_copy_pass = gpu_copy_pass_tag structure ptr
+let gpu_copy_pass : gpu_copy_pass typ = ptr gpu_copy_pass_structure
+let gpu_copy_pass_opt : gpu_copy_pass option typ = ptr_opt gpu_copy_pass_structure
+
+
+(* No definition (opaque struct) *)
+type gpu_fence_tag
+let gpu_fence_structure : gpu_fence_tag structure typ = structure "SDL_gpu_fence"
+type gpu_fence = gpu_fence_tag structure ptr
+let gpu_fence : gpu_fence typ = ptr gpu_fence_structure
+let gpu_fence_opt : gpu_fence option typ = ptr_opt gpu_fence_structure
 
 type gpu_primitive_type =
   | GPU_PRIMITIVETYPE_TRIANGLELIST
@@ -6865,9 +6931,11 @@ let gpu_vulkan_options_opt = Helpers.value_opt_as_ptr gpu_vulkan_options
 
 
 (* No definition (opaque struct) *)
-type haptic = unit ptr
-let haptic : haptic typ = ptr void
-let haptic_opt : haptic option typ = ptr_opt void
+type haptic_tag
+let haptic_structure : haptic_tag structure typ = structure "SDL_haptic"
+type haptic = haptic_tag structure ptr
+let haptic : haptic typ = ptr haptic_structure
+let haptic_opt : haptic option typ = ptr_opt haptic_structure
 
 let haptic_effect_type = ushort (* prim *)
 let haptic_direction_type = uchar (* prim *)
@@ -7055,9 +7123,11 @@ let haptic_effect_opt = Helpers.value_opt_as_ptr haptic_effect
 let haptic_id = uint (* prim *)
 
 (* No definition (opaque struct) *)
-type hid_device = unit ptr
-let hid_device : hid_device typ = ptr void
-let hid_device_opt : hid_device option typ = ptr_opt void
+type hid_device_tag
+let hid_device_structure : hid_device_tag structure typ = structure "SDL_hid_device"
+type hid_device = hid_device_tag structure ptr
+let hid_device : hid_device typ = ptr hid_device_structure
+let hid_device_opt : hid_device option typ = ptr_opt hid_device_structure
 
 type hid_bus_type =
   | HID_API_BUS_UNKNOWN
@@ -7132,7 +7202,7 @@ let hint_priority_of_enum : hint_priority_enum -> hint_priority = function
   | _ -> invalid_arg "Wrong value for hint_priority."
 
 type hint_callback = data -> string -> string -> string -> unit
-let hint_callback = funptr (ptr void @-> string @-> string @-> string @-> returning void)
+let hint_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> string @-> string @-> string @-> returning void)
 let init_flags = uint (* prim *)
 type app_result =
   | APP_CONTINUE
@@ -7154,20 +7224,22 @@ let app_result_of_enum : app_result_enum -> app_result = function
   | _ -> invalid_arg "Wrong value for app_result."
 
 type app_init_func = data Ctypes.ptr -> int -> string Ctypes.ptr -> app_result_enum
-let app_init_func = funptr (ptr (ptr void) @-> int @-> ptr string @-> returning app_result)
+let app_init_func = funptr ~thread_registration:true ~runtime_lock:true (ptr (ptr void) @-> int @-> ptr string @-> returning app_result)
 type app_iterate_func = data -> app_result_enum
-let app_iterate_func = funptr (ptr void @-> returning app_result)
+let app_iterate_func = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> returning app_result)
 type app_event_func = data -> event -> app_result_enum
-let app_event_func = funptr (ptr void @-> event @-> returning app_result)
+let app_event_func = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> event @-> returning app_result)
 type app_quit_func = data -> app_result_enum -> unit
-let app_quit_func = funptr (ptr void @-> app_result @-> returning void)
+let app_quit_func = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> app_result @-> returning void)
 type main_thread_callback = data -> unit
-let main_thread_callback = funptr (ptr void @-> returning void)
+let main_thread_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> returning void)
 
 (* No definition (opaque struct) *)
-type shared_object = unit ptr
-let shared_object : shared_object typ = ptr void
-let shared_object_opt : shared_object option typ = ptr_opt void
+type shared_object_tag
+let shared_object_structure : shared_object_tag structure typ = structure "SDL_shared_object"
+type shared_object = shared_object_tag structure ptr
+let shared_object : shared_object typ = ptr shared_object_structure
+let shared_object_opt : shared_object option typ = ptr_opt shared_object_structure
 
 module Locale = struct
   type _t_raw
@@ -7305,7 +7377,7 @@ let log_priority_of_enum : log_priority_enum -> log_priority =
     | None -> invalid_arg "Wrong value for log_priority."
 
 type log_output_function = data -> int -> log_priority_enum -> string -> unit
-let log_output_function = funptr (ptr void @-> int @-> log_priority @-> string @-> returning void)
+let log_output_function = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> int @-> log_priority @-> string @-> returning void)
 let message_box_flags = uint (* prim *)
 let message_box_button_flags = uint (* prim *)
 module MessageBoxButtonData = struct
@@ -7402,13 +7474,17 @@ let message_box_data = MessageBoxData.t
 let message_box_data_opt = Helpers.value_opt_as_ptr message_box_data
 
 
-let metal_view = ptr void
-type metal_view = data
+type metal_view_tag
+let metal_view_structure : metal_view_tag structure typ = structure "SDL_MetalView"
+type metal_view = metal_view_tag structure ptr
+let metal_view : metal_view typ = ptr metal_view_structure
 
 (* No definition (opaque struct) *)
-type process = unit ptr
-let process : process typ = ptr void
-let process_opt : process option typ = ptr_opt void
+type process_tag
+let process_structure : process_tag structure typ = structure "SDL_process"
+type process = process_tag structure ptr
+let process : process typ = ptr process_structure
+let process_opt : process option typ = ptr_opt process_structure
 
 type process_io =
   | PROCESS_STDIO_INHERITED
@@ -7525,9 +7601,11 @@ let renderer_logical_presentation_of_enum : renderer_logical_presentation_enum -
 
 
 (* No definition (opaque struct) *)
-type renderer = unit ptr
-let renderer : renderer typ = ptr void
-let renderer_opt : renderer option typ = ptr_opt void
+type renderer_tag
+let renderer_structure : renderer_tag structure typ = structure "SDL_renderer"
+type renderer = renderer_tag structure ptr
+let renderer : renderer typ = ptr renderer_structure
+let renderer_opt : renderer option typ = ptr_opt renderer_structure
 
 module Texture = struct
   type _t_raw
@@ -7574,26 +7652,28 @@ let gpu_render_state_create_info_opt = Helpers.value_opt_as_ptr gpu_render_state
 
 
 (* No definition (opaque struct) *)
-type gpu_render_state = unit ptr
-let gpu_render_state : gpu_render_state typ = ptr void
-let gpu_render_state_opt : gpu_render_state option typ = ptr_opt void
+type gpu_render_state_tag
+let gpu_render_state_structure : gpu_render_state_tag structure typ = structure "SDL_gpu_render_state"
+type gpu_render_state = gpu_render_state_tag structure ptr
+let gpu_render_state : gpu_render_state typ = ptr gpu_render_state_structure
+let gpu_render_state_opt : gpu_render_state option typ = ptr_opt gpu_render_state_structure
 
 module StorageInterface = struct
   type _t
   type t = _t structure
   let t : t typ = structure "SDL_StorageInterface"
   let version = field t "version" int_as_uint
-  let close = field t "close" (funptr (ptr void @-> returning bool))
-  let ready = field t "ready" (funptr (ptr void @-> returning bool))
-  let enumerate = field t "enumerate" (funptr (ptr void @-> string @-> enumerate_directory_callback @-> ptr void @-> returning bool))
-  let info = field t "info" (funptr (ptr void @-> string @-> ptr path_info @-> returning bool))
-  let read_file = field t "read_file" (funptr (ptr void @-> string @-> ptr void @-> uint64 @-> returning bool))
-  let write_file = field t "write_file" (funptr (ptr void @-> string @-> ptr void @-> uint64 @-> returning bool))
-  let mkdir = field t "mkdir" (funptr (ptr void @-> string @-> returning bool))
-  let remove = field t "remove" (funptr (ptr void @-> string @-> returning bool))
-  let rename = field t "rename" (funptr (ptr void @-> string @-> string @-> returning bool))
-  let copy = field t "copy" (funptr (ptr void @-> string @-> string @-> returning bool))
-  let space_remaining = field t "space_remaining" (funptr (ptr void @-> returning uint64))
+  let close = field t "close" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> returning bool))
+  let ready = field t "ready" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> returning bool))
+  let enumerate = field t "enumerate" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> string @-> enumerate_directory_callback @-> ptr void @-> returning bool))
+  let info = field t "info" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> string @-> ptr path_info @-> returning bool))
+  let read_file = field t "read_file" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> string @-> ptr void @-> uint64 @-> returning bool))
+  let write_file = field t "write_file" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> string @-> ptr void @-> uint64 @-> returning bool))
+  let mkdir = field t "mkdir" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> string @-> returning bool))
+  let remove = field t "remove" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> string @-> returning bool))
+  let rename = field t "rename" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> string @-> string @-> returning bool))
+  let copy = field t "copy" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> string @-> string @-> returning bool))
+  let space_remaining = field t "space_remaining" (funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> returning uint64))
   let () = seal t
   let get = getf
   let set = setf
@@ -7605,9 +7685,11 @@ let storage_interface_opt = Helpers.value_opt_as_ptr storage_interface
 
 
 (* No definition (opaque struct) *)
-type storage = unit ptr
-let storage : storage typ = ptr void
-let storage_opt : storage option typ = ptr_opt void
+type storage_tag
+let storage_structure : storage_tag structure typ = structure "SDL_storage"
+type storage = storage_tag structure ptr
+let storage : storage typ = ptr storage_structure
+let storage_opt : storage option typ = ptr_opt storage_structure
 
 type sandbox =
   | SANDBOX_NONE
@@ -7694,26 +7776,32 @@ let time_format_of_enum : time_format_enum -> time_format = function
 let timer_id = uint (* prim *)
 type timer_callback = data -> Unsigned.uint -> Unsigned.uint -> Unsigned.uint
 let timer_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> uint @-> uint @-> returning uint)
-type ns_timer_callback = data -> Unsigned.uint -> Unsigned.ulong -> Unsigned.ulong
-let ns_timer_callback = funptr (ptr void @-> uint @-> ulong @-> returning ulong)
+type ns_timer_callback = data -> Unsigned.uint -> Unsigned.uint64 -> Unsigned.uint64
+let ns_timer_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> uint @-> uint64_t @-> returning uint64_t)
 
 (* No definition (opaque struct) *)
-type tray = unit ptr
-let tray : tray typ = ptr void
-let tray_opt : tray option typ = ptr_opt void
-
-
-(* No definition (opaque struct) *)
-type tray_menu = unit ptr
-let tray_menu : tray_menu typ = ptr void
-let tray_menu_opt : tray_menu option typ = ptr_opt void
+type tray_tag
+let tray_structure : tray_tag structure typ = structure "SDL_tray"
+type tray = tray_tag structure ptr
+let tray : tray typ = ptr tray_structure
+let tray_opt : tray option typ = ptr_opt tray_structure
 
 
 (* No definition (opaque struct) *)
-type tray_entry = unit ptr
-let tray_entry : tray_entry typ = ptr void
-let tray_entry_opt : tray_entry option typ = ptr_opt void
+type tray_menu_tag
+let tray_menu_structure : tray_menu_tag structure typ = structure "SDL_tray_menu"
+type tray_menu = tray_menu_tag structure ptr
+let tray_menu : tray_menu typ = ptr tray_menu_structure
+let tray_menu_opt : tray_menu option typ = ptr_opt tray_menu_structure
+
+
+(* No definition (opaque struct) *)
+type tray_entry_tag
+let tray_entry_structure : tray_entry_tag structure typ = structure "SDL_tray_entry"
+type tray_entry = tray_entry_tag structure ptr
+let tray_entry : tray_entry typ = ptr tray_entry_structure
+let tray_entry_opt : tray_entry option typ = ptr_opt tray_entry_structure
 
 let tray_entry_flags = uint (* prim *)
 type tray_callback = data -> tray_entry -> unit
-let tray_callback = funptr (ptr void @-> tray_entry @-> returning void)
+let tray_callback = funptr ~thread_registration:true ~runtime_lock:true (ptr void @-> tray_entry @-> returning void)

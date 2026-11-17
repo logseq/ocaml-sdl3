@@ -1,6 +1,14 @@
 # ocaml-sdl3
 # OCaml Bindings to the SDL3 library
 
+This fork maintains the upstream bindings with distinct resource types,
+portable fixed-width integers, corrected predicate results, safe event-watch
+registration and automated regressions. See [API migrations](docs/api-migrations.md)
+for the intentional API changes. Applications can bundle SDL3; their users do
+not need to install it. Development and CI can use
+`python3 tooling/install_sdl3.py /path/to/prefix` to build a checksum-pinned
+runtime. The fork does not yet claim that all generated bindings are validated.
+
 [SDL3](https://wiki.libsdl.org/SDL3/FrontPage) is the new version
 (first release 2025) of the famous SDL library. ("A cross-platform
 development library designed to provide low level access to audio,

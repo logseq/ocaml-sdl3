@@ -16,12 +16,12 @@ let peeps events numevents action min_type max_type =
   peeps events numevents action (Unsigned.UInt.of_int min_type) (Unsigned.UInt.of_int max_type)
 
 let has = ff "SDL_HasEvent"
-  (uint32 @-> returning true_to_ok)
+  (uint32 @-> returning bool)
 let has typ =
   has (Unsigned.UInt.of_int typ)
 
 let hass = ff "SDL_HasEvents"
-  (uint32 @-> uint32 @-> returning true_to_ok)
+  (uint32 @-> uint32 @-> returning bool)
 let hass min_type max_type =
   hass (Unsigned.UInt.of_int min_type) (Unsigned.UInt.of_int max_type)
 
@@ -51,13 +51,50 @@ let set_filter = ff "SDL_SetEventFilter"
   (event_filter @-> ptr void @-> returning void)
 
 let get_filter = ff "SDL_GetEventFilter"
-  (ptr event_filter @-> ptr (ptr void) @-> returning true_to_ok)
+  (ptr event_filter @-> ptr (ptr void) @-> returning bool)
 
-let add_watch = ff "SDL_AddEventWatch"
-  (event_filter @-> ptr void @-> returning true_to_ok)
+module Watch_callback = (val Foreign.dynamic_funptr
+  ~runtime_lock:true ~thread_registration:true
+  (ptr void @-> event @-> returning bool))
 
-let remove_watch = ff "SDL_RemoveEventWatch"
-  (event_filter @-> ptr void @-> returning void)
+type watch = {
+  callback : Watch_callback.t;
+  userdata : data;
+  mutable active : bool;
+}
+
+let watches = ref []
+let watches_mutex = Mutex.create ()
+let with_watches f =
+  Mutex.lock watches_mutex;
+  Fun.protect ~finally:(fun () -> Mutex.unlock watches_mutex) f
+
+let add_watch_raw = ff "SDL_AddEventWatch"
+  (Watch_callback.t @-> ptr void @-> returning bool)
+
+let remove_watch_raw = ff "SDL_RemoveEventWatch"
+  (Watch_callback.t @-> ptr void @-> returning void)
+
+let add_watch filter userdata =
+  let callback = Watch_callback.of_fun filter in
+  let watch = {callback; userdata; active=true} in
+  with_watches (fun () -> watches := watch :: !watches);
+  if add_watch_raw callback userdata then Ok watch
+  else begin
+    with_watches (fun () -> watches := List.filter (fun w -> w != watch) !watches);
+    Watch_callback.free callback;
+    error ()
+  end
+
+let remove_watch watch =
+  let remove = with_watches (fun () ->
+    if not watch.active then false
+    else begin watch.active <- false; true end) in
+  if remove then begin
+    remove_watch_raw watch.callback watch.userdata;
+    with_watches (fun () -> watches := List.filter (fun w -> w != watch) !watches);
+    Watch_callback.free watch.callback
+  end
 
 let filters = ff "SDL_FilterEvents"
   (event_filter @-> ptr void @-> returning void)

@@ -184,7 +184,7 @@ On Android you can directly specify the input type:
     @param window the window to enable text input.
     @param props the properties to use.*)
 
-val text_input_active : window -> unit result
+val text_input_active : window -> bool
 (** {{:https://wiki.libsdl.org/SDL3/SDL_TextInputActive}SDL_TextInputActive}: Check whether or not Unicode text input events are enabled for a window.
 
 

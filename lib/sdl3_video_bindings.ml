@@ -229,12 +229,12 @@ let get_pixel_format = ff "SDL_GetWindowPixelFormat"
 let create = ff "SDL_CreateWindow"
   (string @-> int @-> int @-> window_flags @-> returning (some_to_ok window_opt))
 let create title w h flags =
-  create title w h (Unsigned.ULong.of_int64 flags)
+  create title w h (Unsigned.UInt64.of_int64 flags)
 
 let create_popup = ff "SDL_CreatePopupWindow"
   (window_opt @-> int @-> int @-> int @-> int @-> window_flags @-> returning (some_to_ok window_opt))
 let create_popup parent offset_x offset_y w h flags =
-  create_popup parent offset_x offset_y w h (Unsigned.ULong.of_int64 flags)
+  create_popup parent offset_x offset_y w h (Unsigned.UInt64.of_int64 flags)
 
 let create_with_properties = ff "SDL_CreateWindowWithProperties"
   (properties_id @-> returning (some_to_ok window_opt))
@@ -256,7 +256,7 @@ let get_properties = ff "SDL_GetWindowProperties"
   (window @-> returning int_as_uint)
 
 let get_flags = ff "SDL_GetWindowFlags"
-  (window @-> returning int64_as_ulong)
+  (window @-> returning int64_as_uint64)
 
 let set_title = ff "SDL_SetWindowTitle"
   (window @-> string @-> returning true_to_ok)

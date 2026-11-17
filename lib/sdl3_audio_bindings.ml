@@ -132,7 +132,7 @@ let resume devid =
   resume (Unsigned.UInt.of_int devid)
 
 let paused = ff "SDL_AudioDevicePaused"
-  (audio_device_id @-> returning true_to_ok)
+  (audio_device_id @-> returning bool)
 let paused devid =
   paused (Unsigned.UInt.of_int devid)
 
@@ -260,7 +260,7 @@ let resume_device = ff ~release_runtime_lock:true "SDL_ResumeAudioStreamDevice"
   (audio_stream @-> returning true_to_ok)
 
 let device_paused = ff "SDL_AudioStreamDevicePaused"
-  (audio_stream @-> returning true_to_ok)
+  (audio_stream @-> returning bool)
 
 let lock = ff "SDL_LockAudioStream"
   (audio_stream @-> returning true_to_ok)

@@ -21,9 +21,7 @@ let load ?env ?(debug=false) ~name candidates =
     | [] -> None
     | filename :: rest ->
       try
-        print_endline filename;
         let dl = Dl.dlopen ~flags ~filename in
-        print_endline ("chosen: " ^ filename);
         Some dl
       with exn ->
         errors := (filename, exn) :: !errors;
