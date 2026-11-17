@@ -37,6 +37,8 @@ let test_window () =
         check "software texture present" true));
     Sdl.Event.flushs 0 65535;
     check "empty event queue is false" (not (Sdl.Event.has Sdl.event_quit));
+    check "event timeout is false" (not (Sdl.Event.wait_timeout None 1));
+    Sdl.Event.flushs 0 65535;
     let event = Sdl.Event.create () in
     let motion = Sdl.Event.(get event motion) in
     T.MouseMotionEvent.(set motion typ Sdl.event_mouse_motion);

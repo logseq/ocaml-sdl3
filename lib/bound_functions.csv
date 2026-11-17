@@ -971,7 +971,7 @@ SDL version, SDL name, Category (SDL file), Module, OCaml name, raw signature, A
 3.2.0, SDL_WaitCondition, Mutex, Condition, wait, "condition @-> mutex @-> returning void", "condition -> mutex -> unit"
 3.2.0, SDL_WaitConditionTimeout, Mutex, Condition, wait_timeout, "condition @-> mutex @-> sint32 @-> returning true_to_ok", "condition -> mutex -> int -> unit result"
 3.2.0, SDL_WaitEvent, Events, Event, wait, "event_opt @-> returning true_to_ok", "event option -> unit result"
-3.2.0, SDL_WaitEventTimeout, Events, Event, wait_timeout, "event_opt @-> sint32 @-> returning true_to_ok", "event option -> int -> unit result"
+3.2.0, SDL_WaitEventTimeout, Events, Event, wait_timeout, "event_opt @-> sint32 @-> returning bool", "event option -> int -> bool"
 3.2.0, SDL_WaitForGPUFences, Gpu, GPU, wait_for_fences, "gpu_device @-> bool @-> ptr gpu_fence @-> uint32 @-> returning true_to_ok", "gpu_device -> bool -> gpu_fence list -> unit result"
 3.2.0, SDL_WaitForGPUIdle, Gpu, GPU, wait_for_idle, "gpu_device @-> returning true_to_ok", "gpu_device -> unit result"
 3.2.0, SDL_WaitForGPUSwapchain, Gpu, GPU, wait_for_swapchain, "gpu_device @-> window @-> returning true_to_ok", "gpu_device -> window -> unit result"

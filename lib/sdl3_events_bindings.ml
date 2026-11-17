@@ -42,7 +42,7 @@ let wait = ff ~release_runtime_lock:true "SDL_WaitEvent"
   (event_opt @-> returning true_to_ok)
 
 let wait_timeout = ff ~release_runtime_lock:true "SDL_WaitEventTimeout"
-  (event_opt @-> sint32 @-> returning true_to_ok)
+  (event_opt @-> sint32 @-> returning bool)
 
 let push = ff "SDL_PushEvent"
   (event @-> returning true_to_ok)

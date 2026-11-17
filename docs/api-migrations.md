@@ -21,6 +21,8 @@ Changes must be preserved when importing new generated files.
   predicates. A normal false result no longer reads a stale SDL error.
   Replace `match Sdl.text_input_active window with Ok () -> ... | Error _ -> ...`
   with `if Sdl.text_input_active window then ... else ...`.
+- `Event.wait_timeout` returns SDL's boolean result. A normal timeout is
+  `false`, rather than an error containing an empty or stale SDL message.
 - `Event.add_watch callback userdata` returns a retained, abstract `Event.watch`
   token. Remove it with `Event.remove_watch watch`; repeated removal is safe.
   The same native callback address is used for registration and removal, and

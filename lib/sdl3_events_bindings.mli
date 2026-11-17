@@ -170,7 +170,7 @@ this function in the thread that initialized the video subsystem.
     @param event the SDL_Event structure to be filled in with the next event
 from the queue, or [None].*)
 
-val wait_timeout : event option -> int -> unit result
+val wait_timeout : event option -> int -> bool
 (** {{:https://wiki.libsdl.org/SDL3/SDL_WaitEventTimeout}SDL_WaitEventTimeout}: Wait until the specified timeout (in milliseconds) for the next available
 event.
 
@@ -258,6 +258,7 @@ be stored here.*)
 
 type watch
 (** A retained native event-watch registration. *)
+
 val add_watch : event_filter -> data -> watch result
 (** {{:https://wiki.libsdl.org/SDL3/SDL_AddEventWatch}SDL_AddEventWatch}: Add a callback to be triggered when an event is added to the event queue.
 [filter]will be called when an event happens, and its return value is
