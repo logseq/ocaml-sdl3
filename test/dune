@@ -9,7 +9,7 @@
  (alias runtest)
  (deps compile_failure.py wrong_window.ml wrong_renderer.ml ../lib/sdl3.cma)
  (action
-  (run python3 compile_failure.py %{ocamlc} ../lib/.sdl3.objs/byte)))
+  (run python3 compile_failure.py %{bin:ocamlfind} ../lib/.sdl3.objs/byte)))
 
 (rule
  (alias runtest)

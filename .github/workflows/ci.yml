@@ -24,7 +24,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxkbcommon-dev libwayland-dev wayland-protocols libasound2-dev libpulse-dev libudev-dev libgl1-mesa-dev libegl1-mesa-dev
+          sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev libxkbcommon-dev libwayland-dev wayland-protocols libasound2-dev libpulse-dev libudev-dev libgl1-mesa-dev libegl1-mesa-dev
       - name: Install pinned SDL3
         run: python tooling/install_sdl3.py "$RUNNER_TEMP/sdl3" --github-env
       - name: Install OCaml dependencies

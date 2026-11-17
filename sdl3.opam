@@ -14,6 +14,7 @@ depends: [
   "ocaml"
   "ctypes" {>= "0.23.0"}
   "ctypes-foreign" {>= "0.23.0"}
+  "ocamlfind" {with-test}
   "odoc" {with-doc}
 ]
 build: [

@@ -14,7 +14,8 @@
  (depends
    ocaml
    (ctypes (>= 0.23.0))
-   (ctypes-foreign (>= 0.23.0)))
+   (ctypes-foreign (>= 0.23.0))
+   (ocamlfind :with-test))
  (tags (sdl sdl3 graphics events devices)))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html
